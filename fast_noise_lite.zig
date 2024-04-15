@@ -291,9 +291,9 @@ fn pingPong(t: f32) f32 {
 }
 
 fn calculateFractalBounding(self: *Self) void {
-    var gain: f32 = std.math.abs(self.gain);
+    var gain: f32 = std.math.fabs(self.gain);
     var amp = gain;
-    var amp_fractal = 1.0;
+    var amp_fractal: f32 = 1.0;
     for (1..self.octaves) |_| {
         amp_fractal += amp;
         amp *= gain;
@@ -333,7 +333,7 @@ fn valCoord3D(seed: i32, xPrimed: i32, yPrimed: i32, zPrimed: i32) f32 {
 
     hash *%= hash;
     hash ^= hash << 19;
-    return hash *% (1 / 2147483648.0);
+    return @as(f32, @floatFromInt(hash)) * (1.0 / 2147483648.0);
 }
 
 fn gradCoord2D(seed: i32, xPrimed: i32, yPrimed: i32, xd: f32, yd: f32) f32 {
@@ -432,12 +432,12 @@ fn genNoiseSingle2D(self: Self, comptime TFloat: type, seed: i32, x: TFloat, y: 
 
 fn genNoiseSingle3D(self: Self, comptime TFloat: type, seed: i32, x: TFloat, y: TFloat, z: TFloat) f32 {
     return switch (self.noiseType) {
-        .OpenSimplex2 => singleOpenSimplex2_3D(TFloat, seed, x, y, z),
-        .OpenSimplex2S => singleOpenSimplex2S_3D(seed, x, y, z),
-        .Cellular => self.singleCellular3D(seed, x, y, z),
-        .Perlin => singlePerlin3D(seed, x, y, z),
-        .ValueCubic => singleValueCubic3D(seed, x, y, z),
-        .Value => singleValue3D(seed, x, y, z),
+        .OpenSimplex2 => singleOpenSimplex2_3D(seed, TFloat, x, y, z),
+        .OpenSimplex2S => singleOpenSimplex2S_3D(seed, TFloat, x, y, z),
+        .Cellular => self.singleCellular3D(seed, TFloat, x, y, z),
+        .Perlin => singlePerlin3D(seed, TFloat, x, y, z),
+        .ValueCubic => singleValueCubic3D(seed, TFloat, x, y, z),
+        .Value => singleValue3D(seed, TFloat, x, y, z),
     };
 }
 
@@ -466,27 +466,27 @@ fn transformNoiseCoordinate3D(self: Self, comptime TFloat: type, x: *TFloat, y: 
 
     switch (self.transformType3D) {
         .ImproveXYPlanes => {
-            var xy: TFloat = x + y;
+            var xy: TFloat = x.* + y.*;
             var s2: TFloat = xy * -0.211324865405187;
             z.* *= 0.577350269189626;
-            x.* += s2 - z;
-            y.* = y + s2 - z;
+            x.* += s2 - z.*;
+            y.* = y.* + s2 - z.*;
             z.* += xy * 0.577350269189626;
         },
         .ImproveXZPlanes => {
-            var xz: TFloat = x + z;
+            var xz: TFloat = x.* + z.*;
             var s2: TFloat = xz * -0.211324865405187;
             y.* *= 0.577350269189626;
-            x.* += s2 - y;
-            z.* += s2 - y;
+            x.* += s2 - y.*;
+            z.* += s2 - y.*;
             y.* += xz * 0.577350269189626;
         },
         .DefaultOpenSimplex2 => {
             var R3: TFloat = (2.0 / 3.0);
-            var r: TFloat = (x + y + z) * R3; // Rotation, not skew
-            x.* = r - x;
-            y.* = r - y;
-            z.* = r - z;
+            var r: TFloat = (x.* + y.* + z.*) * R3; // Rotation, not skew
+            x.* = r - x.*;
+            y.* = r - y.*;
+            z.* = r - z.*;
         },
         else => {},
     }
@@ -641,7 +641,7 @@ fn genFractalRidged3D(self: Self, comptime TFloat: type, x: TFloat, y: TFloat, z
     var z2 = z;
 
     for (0..self.octaves) |_| {
-        const noise = std.math.fabs(self.genNoiseSingle2D(TFloat, seed, x2, y2, z2));
+        const noise = std.math.fabs(self.genNoiseSingle3D(TFloat, seed, x2, y2, z2));
         seed += 1;
         sum += (noise * -2 + 1) * amp;
         amp *= std.math.lerp(1.0, 1 - noise, self.weightedStrength);
@@ -687,7 +687,7 @@ fn genFractalPingPong3D(self: Self, comptime TFloat: type, x: TFloat, y: TFloat,
     var z2 = z;
 
     for (0..self.octaves) |_| {
-        const noise = pingPong((self.genNoiseSingle2D(TFloat, seed, x2, y2, z2) + 1) * self.pingPongStrength);
+        const noise = pingPong((self.genNoiseSingle3D(TFloat, seed, x2, y2, z2) + 1) * self.pingPongStrength);
         seed += 1;
         sum += (noise - 0.5) * 2 * amp;
         amp *= std.math.lerp(1.0, noise, self.weightedStrength);
@@ -771,7 +771,7 @@ fn singleSimplex2D(comptime TFloat: type, seed: i32, x: TFloat, y: TFloat) f32 {
     return (n0 + n1 + n2) * 99.83685446303647;
 }
 
-fn singleOpenSimplex2_3D(seed: i32, comptime TFloat: type, x: TFloat, y: TFloat, z: TFloat) f32 {
+fn singleOpenSimplex2_3D(inputSeed: i32, comptime TFloat: type, x: TFloat, y: TFloat, z: TFloat) f32 {
     // 3D OpenSimplex2 case uses two offset rotated cube grids.
 
     // --- Rotation moved to TransformNoiseCoordinate method ---
@@ -801,6 +801,9 @@ fn singleOpenSimplex2_3D(seed: i32, comptime TFloat: type, x: TFloat, y: TFloat,
     var value: f32 = 0;
     var a: f32 = (0.6 - x0 * x0) - (y0 * y0 + z0 * z0);
 
+    // We modify the seed in this loop but Zig arguments are immutable so we make a variable
+    var seed = inputSeed;
+
     var l: i32 = 0;
     while (true) : (l += 1) {
         if (a > 0) {
@@ -816,17 +819,17 @@ fn singleOpenSimplex2_3D(seed: i32, comptime TFloat: type, x: TFloat, y: TFloat,
         var z1: f32 = z0;
 
         if (ax0 >= ay0 and ax0 >= az0) {
-            x1 += xNSign;
-            b -= xNSign * 2 * x1;
-            i1_ -= xNSign * PrimeX;
+            x1 += @as(f32, @floatFromInt(xNSign));
+            b -= @as(f32, @floatFromInt(xNSign)) * 2 * x1;
+            i1_ -%= xNSign *% PrimeX;
         } else if (ay0 > ax0 and ay0 >= az0) {
-            y1 += yNSign;
-            b -= yNSign * 2 * y1;
-            j1 -= yNSign * PrimeY;
+            y1 += @as(f32, @floatFromInt(yNSign));
+            b -= @as(f32, @floatFromInt(yNSign)) * 2 * y1;
+            j1 -%= yNSign *% PrimeY;
         } else {
-            z1 += zNSign;
-            b -= zNSign * 2 * z1;
-            k1 -= zNSign * PrimeZ;
+            z1 += @as(f32, @floatFromInt(zNSign));
+            b -= @as(f32, @floatFromInt(zNSign)) * 2 * z1;
+            k1 -%= zNSign *% PrimeZ;
         }
 
         if (b > 0) {
@@ -841,9 +844,9 @@ fn singleOpenSimplex2_3D(seed: i32, comptime TFloat: type, x: TFloat, y: TFloat,
         ay0 = 0.5 - ay0;
         az0 = 0.5 - az0;
 
-        x0 = xNSign * ax0;
-        y0 = yNSign * ay0;
-        z0 = zNSign * az0;
+        x0 = @as(f32, @floatFromInt(xNSign)) * ax0;
+        y0 = @as(f32, @floatFromInt(yNSign)) * ay0;
+        z0 = @as(f32, @floatFromInt(zNSign)) * az0;
 
         a += (0.75 - ax0) - (ay0 + az0);
 
@@ -971,7 +974,7 @@ fn singleOpenSimplex2S_2D(seed: i32, x: anytype, y: anytype) f32 {
     return value * 18.24196194486065;
 }
 
-fn singleOpenSimplex2S_3D(seed: i32, comptime TFloat: type, x: TFloat, y: TFloat, z: TFloat) void {
+fn singleOpenSimplex2S_3D(seed: i32, comptime TFloat: type, x: TFloat, y: TFloat, z: TFloat) f32 {
     // 3D OpenSimplex2S case uses two offset rotated cube grids.
 
     // --- Rotation moved to TransformNoiseCoordinate method ---
@@ -1350,7 +1353,7 @@ fn singleCellular2D(self: Self, seed: i32, x: anytype, y: anytype) f32 {
     };
 }
 
-fn singleCellular3D(self: Self, seed: i32, comptime TFloat: type, x: TFloat, y: TFloat, z: TFloat) void {
+fn singleCellular3D(self: Self, seed: i32, comptime TFloat: type, x: TFloat, y: TFloat, z: TFloat) f32 {
     var xr: i32 = fastRound(x);
     var yr: i32 = fastRound(y);
     var zr: i32 = fastRound(z);
@@ -1464,26 +1467,24 @@ fn singleCellular3D(self: Self, seed: i32, comptime TFloat: type, x: TFloat, y: 
                 xPrimed +%= PrimeX;
             }
         },
-        else => {},
     }
 
-    if (self.cellularDistanceFunction == .Euclidean and @intFromEnum(self.cellularReturnType) >= @intFromEnum(.Distance)) {
+    if (self.cellularDistanceFunction == .Euclidean and @intFromEnum(self.cellularReturnType) >= @intFromEnum(CellularReturnType.Distance)) {
         distance0 = std.math.sqrt(distance0);
 
-        if (@intFromEnum(self.cellularReturnType) >= @intFromEnum(.Distance2)) {
+        if (@intFromEnum(self.cellularReturnType) >= @intFromEnum(CellularReturnType.Distance2)) {
             distance1 = std.math.sqrt(distance1);
         }
     }
 
     return switch (self.cellularReturnType) {
-        .CellValue => closestHash * (1.0 / 2147483648.0),
+        .CellValue => @floatCast(@as(f64, @floatFromInt(closestHash)) * (1.0 / 2147483648.0)),
         .Distance => distance0 - 1.0,
         .Distance2 => distance1 - 1.0,
         .Distance2Add => (distance1 + distance0) * 0.5 - 1.0,
         .Distance2Sub => distance1 - distance0 - 1.0,
         .Distance2Mul => distance1 * distance0 * 0.5 - 1.0,
         .Distance2Div => distance0 / distance1 - 1.0,
-        else => 0.0,
     };
 }
 
@@ -1514,7 +1515,7 @@ fn singlePerlin2D(seed: i32, x: anytype, y: anytype) f32 {
     return std.math.lerp(xf0, xf1, ys) * 1.4247691104677813;
 }
 
-fn singlePerlin3D(seed: i32, comptime TFloat: type, x: TFloat, y: TFloat, z: TFloat) void {
+fn singlePerlin3D(seed: i32, comptime TFloat: type, x: TFloat, y: TFloat, z: TFloat) f32 {
     var x0: i32 = fastFloor(x);
     var y0: i32 = fastFloor(y);
     var z0: i32 = fastFloor(z);
@@ -1579,7 +1580,7 @@ fn singleValueCubic2D(seed: i32, x: anytype, y: anytype) f32 {
     ) * (1.0 / (1.5 * 1.5));
 }
 
-fn singleValueCubic3D(seed: i32, comptime TFloat: type, x: TFloat, y: TFloat, z: TFloat) void {
+fn singleValueCubic3D(seed: i32, comptime TFloat: type, x: TFloat, y: TFloat, z: TFloat) f32 {
     var x1: i32 = fastFloor(x);
     var y1: i32 = fastFloor(y);
     var z1: i32 = fastFloor(z);
@@ -1632,7 +1633,7 @@ fn singleValueCubic3D(seed: i32, comptime TFloat: type, x: TFloat, y: TFloat, z:
             ys,
         ),
         zs,
-    ) * (1 / (1.5 * 1.5 * 1.5));
+    ) * (1.0 / (1.5 * 1.5 * 1.5));
 }
 
 // Value Noise
