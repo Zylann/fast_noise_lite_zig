@@ -286,12 +286,12 @@ fn cubicLerp(a: f32, b: f32, c: f32, d: f32, t: f32) f32 {
 // Note, results are different if t < 0, but FNL only uses it with positive numbers
 fn pingPong(t: f32) f32 {
     // TODO Direct port from C++ looks ugly. Anything better?
-    var t2 = t - @as(f32, @floatFromInt(@as(i32, @intFromFloat(t * 0.5)) * 2));
+    const t2 = t - @as(f32, @floatFromInt(@as(i32, @intFromFloat(t * 0.5)) * 2));
     return if (t2 < 1) t2 else 2 - t2;
 }
 
 fn calculateFractalBounding(self: *Self) void {
-    var gain: f32 = std.math.fabs(self.gain);
+    const gain: f32 = @abs(self.gain);
     var amp = gain;
     var amp_fractal: f32 = 1.0;
     for (1..self.octaves) |_| {
@@ -366,7 +366,7 @@ fn gradCoord3D(seed: i32, xPrimed: i32, yPrimed: i32, zPrimed: i32, xd: f32, yd:
 }
 
 fn gradCoordOut2D(seed: i32, xPrimed: i32, yPrimed: i32, xo: *f32, yo: *f32) void {
-    var hash: i32 = getHash2D(seed, xPrimed, yPrimed) & (255 << 1);
+    const hash: i32 = getHash2D(seed, xPrimed, yPrimed) & (255 << 1);
     const i: u32 = @intCast(hash);
 
     xo.* = Lookup.randVecs2D[i];
@@ -374,7 +374,7 @@ fn gradCoordOut2D(seed: i32, xPrimed: i32, yPrimed: i32, xo: *f32, yo: *f32) voi
 }
 
 fn gradCoordOut3D(seed: i32, xPrimed: i32, yPrimed: i32, zPrimed: i32, xo: *f32, yo: *f32, zo: *f32) void {
-    var hash: i32 = getHash3D(seed, xPrimed, yPrimed, zPrimed) & (255 << 2);
+    const hash: i32 = getHash3D(seed, xPrimed, yPrimed, zPrimed) & (255 << 2);
     const i: u32 = @intCast(hash);
 
     xo.* = Lookup.randVecs3D[i];
@@ -383,34 +383,34 @@ fn gradCoordOut3D(seed: i32, xPrimed: i32, yPrimed: i32, zPrimed: i32, xo: *f32,
 }
 
 fn gradCoordDual2D(seed: i32, xPrimed: i32, yPrimed: i32, xd: f32, yd: f32, xo: *f32, yo: *f32) void {
-    var hash: i32 = getHash2D(seed, xPrimed, yPrimed);
-    var index1: u32 = @intCast(hash & (127 << 1));
-    var index2: u32 = @intCast((hash >> 7) & (255 << 1));
+    const hash: i32 = getHash2D(seed, xPrimed, yPrimed);
+    const index1: u32 = @intCast(hash & (127 << 1));
+    const index2: u32 = @intCast((hash >> 7) & (255 << 1));
 
-    var xg: f32 = Lookup.gradients2D[index1];
-    var yg: f32 = Lookup.gradients2D[index1 | 1];
-    var value: f32 = xd * xg + yd * yg;
+    const xg: f32 = Lookup.gradients2D[index1];
+    const yg: f32 = Lookup.gradients2D[index1 | 1];
+    const value: f32 = xd * xg + yd * yg;
 
-    var xgo: f32 = Lookup.randVecs2D[index2];
-    var ygo: f32 = Lookup.randVecs2D[index2 | 1];
+    const xgo: f32 = Lookup.randVecs2D[index2];
+    const ygo: f32 = Lookup.randVecs2D[index2 | 1];
 
     xo.* = value * xgo;
     yo.* = value * ygo;
 }
 
 fn gradCoordDual3D(seed: i32, xPrimed: i32, yPrimed: i32, zPrimed: i32, xd: f32, yd: f32, zd: f32, xo: *f32, yo: *f32, zo: *f32) void {
-    var hash: i32 = getHash3D(seed, xPrimed, yPrimed, zPrimed);
-    var index1: u32 = @intCast(hash & (63 << 2));
-    var index2: u32 = @intCast((hash >> 6) & (255 << 2));
+    const hash: i32 = getHash3D(seed, xPrimed, yPrimed, zPrimed);
+    const index1: u32 = @intCast(hash & (63 << 2));
+    const index2: u32 = @intCast((hash >> 6) & (255 << 2));
 
-    var xg: f32 = Lookup.gradients3D[index1];
-    var yg: f32 = Lookup.gradients3D[index1 | 1];
-    var zg: f32 = Lookup.gradients3D[index1 | 2];
-    var value: f32 = xd * xg + yd * yg + zd * zg;
+    const xg: f32 = Lookup.gradients3D[index1];
+    const yg: f32 = Lookup.gradients3D[index1 | 1];
+    const zg: f32 = Lookup.gradients3D[index1 | 2];
+    const value: f32 = xd * xg + yd * yg + zd * zg;
 
-    var xgo: f32 = Lookup.randVecs3D[index2];
-    var ygo: f32 = Lookup.randVecs3D[index2 | 1];
-    var zgo: f32 = Lookup.randVecs3D[index2 | 2];
+    const xgo: f32 = Lookup.randVecs3D[index2];
+    const ygo: f32 = Lookup.randVecs3D[index2 | 1];
+    const zgo: f32 = Lookup.randVecs3D[index2 | 2];
 
     xo.* = value * xgo;
     yo.* = value * ygo;
@@ -466,24 +466,24 @@ fn transformNoiseCoordinate3D(self: Self, comptime TFloat: type, x: *TFloat, y: 
 
     switch (self.transformType3D) {
         .ImproveXYPlanes => {
-            var xy: TFloat = x.* + y.*;
-            var s2: TFloat = xy * -0.211324865405187;
+            const xy: TFloat = x.* + y.*;
+            const s2: TFloat = xy * -0.211324865405187;
             z.* *= 0.577350269189626;
             x.* += s2 - z.*;
             y.* = y.* + s2 - z.*;
             z.* += xy * 0.577350269189626;
         },
         .ImproveXZPlanes => {
-            var xz: TFloat = x.* + z.*;
-            var s2: TFloat = xz * -0.211324865405187;
+            const xz: TFloat = x.* + z.*;
+            const s2: TFloat = xz * -0.211324865405187;
             y.* *= 0.577350269189626;
             x.* += s2 - y.*;
             z.* += s2 - y.*;
             y.* += xz * 0.577350269189626;
         },
         .DefaultOpenSimplex2 => {
-            var R3: TFloat = (2.0 / 3.0);
-            var r: TFloat = (x.* + y.* + z.*) * R3; // Rotation, not skew
+            const R3: TFloat = (2.0 / 3.0);
+            const r: TFloat = (x.* + y.* + z.*) * R3; // Rotation, not skew
             x.* = r - x.*;
             y.* = r - y.*;
             z.* = r - z.*;
@@ -619,7 +619,7 @@ fn genFractalRidged2D(self: Self, comptime TFloat: type, x: TFloat, y: TFloat) f
     var y2 = y;
 
     for (0..self.octaves) |_| {
-        const noise = std.math.fabs(self.genNoiseSingle2D(TFloat, seed, x2, y2));
+        const noise = @abs(self.genNoiseSingle2D(TFloat, seed, x2, y2));
         seed += 1;
         sum += (noise * -2 + 1) * amp;
         amp *= std.math.lerp(1.0, 1 - noise, self.weightedStrength);
@@ -641,7 +641,7 @@ fn genFractalRidged3D(self: Self, comptime TFloat: type, x: TFloat, y: TFloat, z
     var z2 = z;
 
     for (0..self.octaves) |_| {
-        const noise = std.math.fabs(self.genNoiseSingle3D(TFloat, seed, x2, y2, z2));
+        const noise = @abs(self.genNoiseSingle3D(TFloat, seed, x2, y2, z2));
         seed += 1;
         sum += (noise * -2 + 1) * amp;
         amp *= std.math.lerp(1.0, 1 - noise, self.weightedStrength);
@@ -718,12 +718,12 @@ fn singleSimplex2D(comptime TFloat: type, seed: i32, x: TFloat, y: TFloat) f32 {
     var j: i32 = fastFloor(y);
     // Input coordinates can be large double-precision floats, while our calculations are done in local space of a
     // lattice cell, so we have to be careful when to cast
-    var xi: f32 = @floatCast(x - @as(TFloat, @floatFromInt(i)));
-    var yi: f32 = @floatCast(y - @as(TFloat, @floatFromInt(j)));
+    const xi: f32 = @floatCast(x - @as(TFloat, @floatFromInt(i)));
+    const yi: f32 = @floatCast(y - @as(TFloat, @floatFromInt(j)));
 
-    var t: f32 = (xi + yi) * G2;
-    var x0: f32 = (xi - t); // Was casted to float in the C++ implementation, but was it necessary?
-    var y0: f32 = (yi - t);
+    const t: f32 = (xi + yi) * G2;
+    const x0: f32 = (xi - t); // Was casted to float in the C++ implementation, but was it necessary?
+    const y0: f32 = (yi - t);
 
     i *%= PrimeX;
     j *%= PrimeY;
@@ -732,35 +732,35 @@ fn singleSimplex2D(comptime TFloat: type, seed: i32, x: TFloat, y: TFloat) f32 {
     var n1: f32 = undefined;
     var n2: f32 = undefined;
 
-    var a: f32 = 0.5 - x0 * x0 - y0 * y0;
+    const a: f32 = 0.5 - x0 * x0 - y0 * y0;
     if (a <= 0) {
         n0 = 0;
     } else {
         n0 = (a * a) * (a * a) * gradCoord2D(seed, i, j, x0, y0);
     }
 
-    var c: f32 = (2 * (1 - 2 * G2) * (1 / G2 - 2)) * t + ((-2 * (1 - 2 * G2) * (1 - 2 * G2)) + a);
+    const c: f32 = (2 * (1 - 2 * G2) * (1 / G2 - 2)) * t + ((-2 * (1 - 2 * G2) * (1 - 2 * G2)) + a);
     if (c <= 0) {
         n2 = 0;
     } else {
-        var x2: f32 = x0 + (2 * G2 - 1);
-        var y2: f32 = y0 + (2 * G2 - 1);
+        const x2: f32 = x0 + (2 * G2 - 1);
+        const y2: f32 = y0 + (2 * G2 - 1);
         n2 = (c * c) * (c * c) * gradCoord2D(seed, i +% PrimeX, j +% PrimeY, x2, y2);
     }
 
     if (y0 > x0) {
-        var x1: f32 = x0 + G2;
-        var y1: f32 = y0 + (G2 - 1);
-        var b: f32 = 0.5 - x1 * x1 - y1 * y1;
+        const x1: f32 = x0 + G2;
+        const y1: f32 = y0 + (G2 - 1);
+        const b: f32 = 0.5 - x1 * x1 - y1 * y1;
         if (b <= 0) {
             n1 = 0;
         } else {
             n1 = (b * b) * (b * b) * gradCoord2D(seed, i, j +% PrimeY, x1, y1);
         }
     } else {
-        var x1: f32 = x0 + (G2 - 1);
-        var y1: f32 = y0 + G2;
-        var b: f32 = 0.5 - x1 * x1 - y1 * y1;
+        const x1: f32 = x0 + (G2 - 1);
+        const y1: f32 = y0 + G2;
+        const b: f32 = 0.5 - x1 * x1 - y1 * y1;
         if (b <= 0) {
             n1 = 0;
         } else {
@@ -883,88 +883,88 @@ fn singleOpenSimplex2S_2D(seed: i32, x: anytype, y: anytype) f32 {
 
     var i: i32 = fastFloor(x);
     var j: i32 = fastFloor(y);
-    var xi: f32 = @floatCast(x - @as(TFloat, @floatFromInt(i)));
-    var yi: f32 = @floatCast(y - @as(TFloat, @floatFromInt(j)));
+    const xi: f32 = @floatCast(x - @as(TFloat, @floatFromInt(i)));
+    const yi: f32 = @floatCast(y - @as(TFloat, @floatFromInt(j)));
 
     i *%= PrimeX;
     j *%= PrimeY;
-    var i1_: i32 = i +% PrimeX; // `i1` is already a type name
-    var j1: i32 = j +% PrimeY;
+    const i1_: i32 = i +% PrimeX; // `i1` is already a type name
+    const j1: i32 = j +% PrimeY;
 
-    var t: f32 = (xi + yi) * G2;
-    var x0: f32 = xi - t;
-    var y0: f32 = yi - t;
+    const t: f32 = (xi + yi) * G2;
+    const x0: f32 = xi - t;
+    const y0: f32 = yi - t;
 
-    var a0: f32 = (2.0 / 3.0) - x0 * x0 - y0 * y0;
+    const a0: f32 = (2.0 / 3.0) - x0 * x0 - y0 * y0;
     var value: f32 = (a0 * a0) * (a0 * a0) * gradCoord2D(seed, i, j, x0, y0);
 
-    var a1: f32 = (2 * (1 - 2 * G2) * (1 / G2 - 2)) * t + ((-2 * (1 - 2 * G2) * (1 - 2 * G2)) + a0);
-    var x1: f32 = x0 - (1 - 2 * G2);
-    var y1: f32 = y0 - (1 - 2 * G2);
+    const a1: f32 = (2 * (1 - 2 * G2) * (1 / G2 - 2)) * t + ((-2 * (1 - 2 * G2) * (1 - 2 * G2)) + a0);
+    const x1: f32 = x0 - (1 - 2 * G2);
+    const y1: f32 = y0 - (1 - 2 * G2);
     value += (a1 * a1) * (a1 * a1) * gradCoord2D(seed, i1_, j1, x1, y1);
 
     // Nested conditionals were faster than compact bit logic/arithmetic.
-    var xmyi: f32 = xi - yi;
+    const xmyi: f32 = xi - yi;
     if (t > G2) {
         if (xi + xmyi > 1) {
-            var x2: f32 = x0 + (3 * G2 - 2);
-            var y2: f32 = y0 + (3 * G2 - 1);
-            var a2: f32 = (2.0 / 3.0) - x2 * x2 - y2 * y2;
+            const x2: f32 = x0 + (3 * G2 - 2);
+            const y2: f32 = y0 + (3 * G2 - 1);
+            const a2: f32 = (2.0 / 3.0) - x2 * x2 - y2 * y2;
             if (a2 > 0) {
                 value += (a2 * a2) * (a2 * a2) * gradCoord2D(seed, i +% (PrimeX << 1), j +% PrimeY, x2, y2);
             }
         } else {
-            var x2: f32 = x0 + G2;
-            var y2: f32 = y0 + (G2 - 1);
-            var a2: f32 = (2.0 / 3.0) - x2 * x2 - y2 * y2;
+            const x2: f32 = x0 + G2;
+            const y2: f32 = y0 + (G2 - 1);
+            const a2: f32 = (2.0 / 3.0) - x2 * x2 - y2 * y2;
             if (a2 > 0) {
                 value += (a2 * a2) * (a2 * a2) * gradCoord2D(seed, i, j +% PrimeY, x2, y2);
             }
         }
 
         if (yi - xmyi > 1) {
-            var x3: f32 = x0 + (3 * G2 - 1);
-            var y3: f32 = y0 + (3 * G2 - 2);
-            var a3: f32 = (2.0 / 3.0) - x3 * x3 - y3 * y3;
+            const x3: f32 = x0 + (3 * G2 - 1);
+            const y3: f32 = y0 + (3 * G2 - 2);
+            const a3: f32 = (2.0 / 3.0) - x3 * x3 - y3 * y3;
             if (a3 > 0) {
                 value += (a3 * a3) * (a3 * a3) * gradCoord2D(seed, i +% PrimeX, j +% (PrimeY << 1), x3, y3);
             }
         } else {
-            var x3: f32 = x0 + (G2 - 1);
-            var y3: f32 = y0 + G2;
-            var a3: f32 = (2.0 / 3.0) - x3 * x3 - y3 * y3;
+            const x3: f32 = x0 + (G2 - 1);
+            const y3: f32 = y0 + G2;
+            const a3: f32 = (2.0 / 3.0) - x3 * x3 - y3 * y3;
             if (a3 > 0) {
                 value += (a3 * a3) * (a3 * a3) * gradCoord2D(seed, i +% PrimeX, j, x3, y3);
             }
         }
     } else {
         if (xi + xmyi < 0) {
-            var x2: f32 = x0 + (1 - G2);
-            var y2: f32 = y0 - G2;
-            var a2: f32 = (2.0 / 3.0) - x2 * x2 - y2 * y2;
+            const x2: f32 = x0 + (1 - G2);
+            const y2: f32 = y0 - G2;
+            const a2: f32 = (2.0 / 3.0) - x2 * x2 - y2 * y2;
             if (a2 > 0) {
                 value += (a2 * a2) * (a2 * a2) * gradCoord2D(seed, i -% PrimeX, j, x2, y2);
             }
         } else {
-            var x2: f32 = x0 + (G2 - 1);
-            var y2: f32 = y0 + G2;
-            var a2: f32 = (2.0 / 3.0) - x2 * x2 - y2 * y2;
+            const x2: f32 = x0 + (G2 - 1);
+            const y2: f32 = y0 + G2;
+            const a2: f32 = (2.0 / 3.0) - x2 * x2 - y2 * y2;
             if (a2 > 0) {
                 value += (a2 * a2) * (a2 * a2) * gradCoord2D(seed, i +% PrimeX, j, x2, y2);
             }
         }
 
         if (yi < xmyi) {
-            var x2: f32 = x0 - G2;
-            var y2: f32 = y0 - (G2 - 1);
-            var a2: f32 = (2.0 / 3.0) - x2 * x2 - y2 * y2;
+            const x2: f32 = x0 - G2;
+            const y2: f32 = y0 - (G2 - 1);
+            const a2: f32 = (2.0 / 3.0) - x2 * x2 - y2 * y2;
             if (a2 > 0) {
                 value += (a2 * a2) * (a2 * a2) * gradCoord2D(seed, i, j -% PrimeY, x2, y2);
             }
         } else {
-            var x2: f32 = x0 + G2;
-            var y2: f32 = y0 + (G2 - 1);
-            var a2: f32 = (2.0 / 3.0) - x2 * x2 - y2 * y2;
+            const x2: f32 = x0 + G2;
+            const y2: f32 = y0 + (G2 - 1);
+            const a2: f32 = (2.0 / 3.0) - x2 * x2 - y2 * y2;
             if (a2 > 0) {
                 value += (a2 * a2) * (a2 * a2) * gradCoord2D(seed, i, j +% PrimeY, x2, y2);
             }
@@ -985,23 +985,23 @@ fn singleOpenSimplex2S_3D(seed: i32, comptime TFloat: type, x: TFloat, y: TFloat
     var i: i32 = fastFloor(x);
     var j: i32 = fastFloor(y);
     var k: i32 = fastFloor(z);
-    var xi: f32 = @floatCast(x - @as(TFloat, @floatFromInt(i)));
-    var yi: f32 = @floatCast(y - @as(TFloat, @floatFromInt(j)));
-    var zi: f32 = @floatCast(z - @as(TFloat, @floatFromInt(k)));
+    const xi: f32 = @floatCast(x - @as(TFloat, @floatFromInt(i)));
+    const yi: f32 = @floatCast(y - @as(TFloat, @floatFromInt(j)));
+    const zi: f32 = @floatCast(z - @as(TFloat, @floatFromInt(k)));
 
     i *%= PrimeX;
     j *%= PrimeY;
     k *%= PrimeZ;
-    var seed2 = seed + 1293373;
+    const seed2 = seed + 1293373;
 
-    var xNMask: i32 = @intFromFloat(-0.5 - xi);
-    var yNMask: i32 = @intFromFloat(-0.5 - yi);
-    var zNMask: i32 = @intFromFloat(-0.5 - zi);
+    const xNMask: i32 = @intFromFloat(-0.5 - xi);
+    const yNMask: i32 = @intFromFloat(-0.5 - yi);
+    const zNMask: i32 = @intFromFloat(-0.5 - zi);
 
-    var x0: f32 = xi + @as(f32, @floatFromInt(xNMask));
-    var y0: f32 = yi + @as(f32, @floatFromInt(yNMask));
-    var z0: f32 = zi + @as(f32, @floatFromInt(zNMask));
-    var a0 = 0.75 - x0 * x0 - y0 * y0 - z0 * z0;
+    const x0: f32 = xi + @as(f32, @floatFromInt(xNMask));
+    const y0: f32 = yi + @as(f32, @floatFromInt(yNMask));
+    const z0: f32 = zi + @as(f32, @floatFromInt(zNMask));
+    const a0 = 0.75 - x0 * x0 - y0 * y0 - z0 * z0;
     var value: f32 = (a0 * a0) * (a0 * a0) * gradCoord3D(
         seed,
         i +% (xNMask & PrimeX),
@@ -1012,10 +1012,10 @@ fn singleOpenSimplex2S_3D(seed: i32, comptime TFloat: type, x: TFloat, y: TFloat
         z0,
     );
 
-    var x1: f32 = xi - 0.5;
-    var y1: f32 = yi - 0.5;
-    var z1: f32 = zi - 0.5;
-    var a1 = 0.75 - x1 * x1 - y1 * y1 - z1 * z1;
+    const x1: f32 = xi - 0.5;
+    const y1: f32 = yi - 0.5;
+    const z1: f32 = zi - 0.5;
+    const a1 = 0.75 - x1 * x1 - y1 * y1 - z1 * z1;
     value += (a1 * a1) * (a1 * a1) * gradCoord3D(
         seed2,
         i +% PrimeX,
@@ -1026,19 +1026,19 @@ fn singleOpenSimplex2S_3D(seed: i32, comptime TFloat: type, x: TFloat, y: TFloat
         z1,
     );
 
-    var xAFlipMask0: f32 = @as(f32, @floatFromInt((xNMask | 1) << 1)) * x1;
-    var yAFlipMask0: f32 = @as(f32, @floatFromInt((yNMask | 1) << 1)) * y1;
-    var zAFlipMask0: f32 = @as(f32, @floatFromInt((zNMask | 1) << 1)) * z1;
-    var xAFlipMask1: f32 = @as(f32, @floatFromInt(-2 - (xNMask << 2))) * x1 - 1.0;
-    var yAFlipMask1: f32 = @as(f32, @floatFromInt(-2 - (yNMask << 2))) * y1 - 1.0;
-    var zAFlipMask1: f32 = @as(f32, @floatFromInt(-2 - (zNMask << 2))) * z1 - 1.0;
+    const xAFlipMask0: f32 = @as(f32, @floatFromInt((xNMask | 1) << 1)) * x1;
+    const yAFlipMask0: f32 = @as(f32, @floatFromInt((yNMask | 1) << 1)) * y1;
+    const zAFlipMask0: f32 = @as(f32, @floatFromInt((zNMask | 1) << 1)) * z1;
+    const xAFlipMask1: f32 = @as(f32, @floatFromInt(-2 - (xNMask << 2))) * x1 - 1.0;
+    const yAFlipMask1: f32 = @as(f32, @floatFromInt(-2 - (yNMask << 2))) * y1 - 1.0;
+    const zAFlipMask1: f32 = @as(f32, @floatFromInt(-2 - (zNMask << 2))) * z1 - 1.0;
 
     var skip5 = false;
-    var a2: f32 = xAFlipMask0 + a0;
+    const a2: f32 = xAFlipMask0 + a0;
     if (a2 > 0) {
-        var x2: f32 = x0 - @as(f32, @floatFromInt(xNMask | 1));
-        var y2: f32 = y0;
-        var z2: f32 = z0;
+        const x2: f32 = x0 - @as(f32, @floatFromInt(xNMask | 1));
+        const y2: f32 = y0;
+        const z2: f32 = z0;
         value += (a2 * a2) * (a2 * a2) * gradCoord3D(
             seed,
             i +% (~xNMask & PrimeX),
@@ -1049,11 +1049,11 @@ fn singleOpenSimplex2S_3D(seed: i32, comptime TFloat: type, x: TFloat, y: TFloat
             z2,
         );
     } else {
-        var a3: f32 = yAFlipMask0 + zAFlipMask0 + a0;
+        const a3: f32 = yAFlipMask0 + zAFlipMask0 + a0;
         if (a3 > 0) {
-            var x3: f32 = x0;
-            var y3: f32 = y0 - @as(f32, @floatFromInt(yNMask | 1));
-            var z3: f32 = z0 - @as(f32, @floatFromInt(zNMask | 1));
+            const x3: f32 = x0;
+            const y3: f32 = y0 - @as(f32, @floatFromInt(yNMask | 1));
+            const z3: f32 = z0 - @as(f32, @floatFromInt(zNMask | 1));
             value += (a3 * a3) * (a3 * a3) * gradCoord3D(
                 seed,
                 i +% (xNMask & PrimeX),
@@ -1065,11 +1065,11 @@ fn singleOpenSimplex2S_3D(seed: i32, comptime TFloat: type, x: TFloat, y: TFloat
             );
         }
 
-        var a4: f32 = xAFlipMask1 + a1;
+        const a4: f32 = xAFlipMask1 + a1;
         if (a4 > 0) {
-            var x4: f32 = @as(f32, @floatFromInt(xNMask | 1)) + x1;
-            var y4: f32 = y1;
-            var z4: f32 = z1;
+            const x4: f32 = @as(f32, @floatFromInt(xNMask | 1)) + x1;
+            const y4: f32 = y1;
+            const z4: f32 = z1;
             value += (a4 * a4) * (a4 * a4) * gradCoord3D(
                 seed2,
                 i + (xNMask & (PrimeX * 2)),
@@ -1084,11 +1084,11 @@ fn singleOpenSimplex2S_3D(seed: i32, comptime TFloat: type, x: TFloat, y: TFloat
     }
 
     var skip9 = false;
-    var a6: f32 = yAFlipMask0 + a0;
+    const a6: f32 = yAFlipMask0 + a0;
     if (a6 > 0) {
-        var x6: f32 = x0;
-        var y6: f32 = y0 - @as(f32, @floatFromInt(yNMask | 1));
-        var z6: f32 = z0;
+        const x6: f32 = x0;
+        const y6: f32 = y0 - @as(f32, @floatFromInt(yNMask | 1));
+        const z6: f32 = z0;
         value += (a6 * a6) * (a6 * a6) * gradCoord3D(
             seed,
             i +% (xNMask & PrimeX),
@@ -1099,11 +1099,11 @@ fn singleOpenSimplex2S_3D(seed: i32, comptime TFloat: type, x: TFloat, y: TFloat
             z6,
         );
     } else {
-        var a7: f32 = xAFlipMask0 + zAFlipMask0 + a0;
+        const a7: f32 = xAFlipMask0 + zAFlipMask0 + a0;
         if (a7 > 0) {
-            var x7: f32 = x0 - @as(f32, @floatFromInt(xNMask | 1));
-            var y7: f32 = y0;
-            var z7: f32 = z0 - @as(f32, @floatFromInt(zNMask | 1));
+            const x7: f32 = x0 - @as(f32, @floatFromInt(xNMask | 1));
+            const y7: f32 = y0;
+            const z7: f32 = z0 - @as(f32, @floatFromInt(zNMask | 1));
             value += (a7 * a7) * (a7 * a7) * gradCoord3D(
                 seed,
                 i +% (~xNMask & PrimeX),
@@ -1115,11 +1115,11 @@ fn singleOpenSimplex2S_3D(seed: i32, comptime TFloat: type, x: TFloat, y: TFloat
             );
         }
 
-        var a8: f32 = yAFlipMask1 + a1;
+        const a8: f32 = yAFlipMask1 + a1;
         if (a8 > 0) {
-            var x8: f32 = x1;
-            var y8: f32 = @as(f32, @floatFromInt(yNMask | 1)) + y1;
-            var z8: f32 = z1;
+            const x8: f32 = x1;
+            const y8: f32 = @as(f32, @floatFromInt(yNMask | 1)) + y1;
+            const z8: f32 = z1;
             value += (a8 * a8) * (a8 * a8) * gradCoord3D(
                 seed2,
                 i +% PrimeX,
@@ -1134,11 +1134,11 @@ fn singleOpenSimplex2S_3D(seed: i32, comptime TFloat: type, x: TFloat, y: TFloat
     }
 
     var skipD = false;
-    var aA: f32 = zAFlipMask0 + a0;
+    const aA: f32 = zAFlipMask0 + a0;
     if (aA > 0) {
-        var xA: f32 = x0;
-        var yA: f32 = y0;
-        var zA: f32 = z0 - @as(f32, @floatFromInt(zNMask | 1));
+        const xA: f32 = x0;
+        const yA: f32 = y0;
+        const zA: f32 = z0 - @as(f32, @floatFromInt(zNMask | 1));
         value += (aA * aA) * (aA * aA) * gradCoord3D(
             seed,
             i +% (xNMask & PrimeX),
@@ -1149,11 +1149,11 @@ fn singleOpenSimplex2S_3D(seed: i32, comptime TFloat: type, x: TFloat, y: TFloat
             zA,
         );
     } else {
-        var aB: f32 = xAFlipMask0 + yAFlipMask0 + a0;
+        const aB: f32 = xAFlipMask0 + yAFlipMask0 + a0;
         if (aB > 0) {
-            var xB: f32 = x0 - @as(f32, @floatFromInt(xNMask | 1));
-            var yB: f32 = y0 - @as(f32, @floatFromInt(yNMask | 1));
-            var zB: f32 = z0;
+            const xB: f32 = x0 - @as(f32, @floatFromInt(xNMask | 1));
+            const yB: f32 = y0 - @as(f32, @floatFromInt(yNMask | 1));
+            const zB: f32 = z0;
             value += (aB * aB) * (aB * aB) * gradCoord3D(
                 seed,
                 i +% (~xNMask & PrimeX),
@@ -1165,11 +1165,11 @@ fn singleOpenSimplex2S_3D(seed: i32, comptime TFloat: type, x: TFloat, y: TFloat
             );
         }
 
-        var aC: f32 = zAFlipMask1 + a1;
+        const aC: f32 = zAFlipMask1 + a1;
         if (aC > 0) {
-            var xC: f32 = x1;
-            var yC: f32 = y1;
-            var zC: f32 = @as(f32, @floatFromInt(zNMask | 1)) + z1;
+            const xC: f32 = x1;
+            const yC: f32 = y1;
+            const zC: f32 = @as(f32, @floatFromInt(zNMask | 1)) + z1;
             value += (aC * aC) * (aC * aC) * gradCoord3D(
                 seed2,
                 i +% PrimeX,
@@ -1184,11 +1184,11 @@ fn singleOpenSimplex2S_3D(seed: i32, comptime TFloat: type, x: TFloat, y: TFloat
     }
 
     if (!skip5) {
-        var a5: f32 = yAFlipMask1 + zAFlipMask1 + a1;
+        const a5: f32 = yAFlipMask1 + zAFlipMask1 + a1;
         if (a5 > 0) {
-            var x5: f32 = x1;
-            var y5: f32 = @as(f32, @floatFromInt(yNMask | 1)) + y1;
-            var z5: f32 = @as(f32, @floatFromInt(zNMask | 1)) + z1;
+            const x5: f32 = x1;
+            const y5: f32 = @as(f32, @floatFromInt(yNMask | 1)) + y1;
+            const z5: f32 = @as(f32, @floatFromInt(zNMask | 1)) + z1;
             value += (a5 * a5) * (a5 * a5) * gradCoord3D(
                 seed2,
                 i +% PrimeX,
@@ -1202,11 +1202,11 @@ fn singleOpenSimplex2S_3D(seed: i32, comptime TFloat: type, x: TFloat, y: TFloat
     }
 
     if (!skip9) {
-        var a9: f32 = xAFlipMask1 + zAFlipMask1 + a1;
+        const a9: f32 = xAFlipMask1 + zAFlipMask1 + a1;
         if (a9 > 0) {
-            var x9: f32 = @as(f32, @floatFromInt(xNMask | 1)) + x1;
-            var y9: f32 = y1;
-            var z9: f32 = @as(f32, @floatFromInt(zNMask | 1)) + z1;
+            const x9: f32 = @as(f32, @floatFromInt(xNMask | 1)) + x1;
+            const y9: f32 = y1;
+            const z9: f32 = @as(f32, @floatFromInt(zNMask | 1)) + z1;
             value += (a9 * a9) * (a9 * a9) * gradCoord3D(
                 seed2,
                 i +% (xNMask & (PrimeX * 2)),
@@ -1220,11 +1220,11 @@ fn singleOpenSimplex2S_3D(seed: i32, comptime TFloat: type, x: TFloat, y: TFloat
     }
 
     if (!skipD) {
-        var aD: f32 = xAFlipMask1 + yAFlipMask1 + a1;
+        const aD: f32 = xAFlipMask1 + yAFlipMask1 + a1;
         if (aD > 0) {
-            var xD: f32 = @as(f32, @floatFromInt(xNMask | 1)) + x1;
-            var yD: f32 = @as(f32, @floatFromInt(yNMask | 1)) + y1;
-            var zD: f32 = z1;
+            const xD: f32 = @as(f32, @floatFromInt(xNMask | 1)) + x1;
+            const yD: f32 = @as(f32, @floatFromInt(yNMask | 1)) + y1;
+            const zD: f32 = z1;
             value += (aD * aD) * (aD * aD) * gradCoord3D(
                 seed2,
                 i +% (xNMask & (PrimeX << 1)),
@@ -1243,17 +1243,17 @@ fn singleOpenSimplex2S_3D(seed: i32, comptime TFloat: type, x: TFloat, y: TFloat
 fn singleCellular2D(self: Self, seed: i32, x: anytype, y: anytype) f32 {
     const TFloat = @TypeOf(x);
 
-    var xr: i32 = fastRound(x);
-    var yr: i32 = fastRound(y);
+    const xr: i32 = fastRound(x);
+    const yr: i32 = fastRound(y);
 
     var distance0: f32 = 1e10;
     var distance1: f32 = 1e10;
     var closestHash: i32 = 0;
 
-    var cellularJitter: f32 = 0.43701595 * self.cellularJitterModifier;
+    const cellularJitter: f32 = 0.43701595 * self.cellularJitterModifier;
 
     var xPrimed: i32 = (xr - 1) *% PrimeX;
-    var yPrimedBase: i32 = (yr - 1) *% PrimeY;
+    const yPrimedBase: i32 = (yr - 1) *% PrimeY;
 
     switch (self.cellularDistanceFunction) {
         .Euclidean, .EuclideanSq => {
@@ -1264,13 +1264,13 @@ fn singleCellular2D(self: Self, seed: i32, x: anytype, y: anytype) f32 {
 
                 var yi = yr - 1;
                 while (yi <= yr + 1) : (yi += 1) {
-                    var hash = getHash2D(seed, xPrimed, yPrimed);
-                    var idx: u32 = @intCast(hash & (255 << 1));
+                    const hash = getHash2D(seed, xPrimed, yPrimed);
+                    const idx: u32 = @intCast(hash & (255 << 1));
 
-                    var vecX: f32 = @as(f32, @floatCast(@as(TFloat, @floatFromInt(xi)) - x)) + Lookup.randVecs2D[idx] * cellularJitter;
-                    var vecY: f32 = @as(f32, @floatCast(@as(TFloat, @floatFromInt(yi)) - y)) + Lookup.randVecs2D[idx | 1] * cellularJitter;
+                    const vecX: f32 = @as(f32, @floatCast(@as(TFloat, @floatFromInt(xi)) - x)) + Lookup.randVecs2D[idx] * cellularJitter;
+                    const vecY: f32 = @as(f32, @floatCast(@as(TFloat, @floatFromInt(yi)) - y)) + Lookup.randVecs2D[idx | 1] * cellularJitter;
 
-                    var newDistance = vecX * vecX + vecY * vecY;
+                    const newDistance = vecX * vecX + vecY * vecY;
 
                     distance1 = @max(@min(distance1, newDistance), distance0);
                     if (newDistance < distance0) {
@@ -1289,13 +1289,13 @@ fn singleCellular2D(self: Self, seed: i32, x: anytype, y: anytype) f32 {
 
                 var yi = yr - 1;
                 while (yi <= yr + 1) : (yi += 1) {
-                    var hash = getHash2D(seed, xPrimed, yPrimed);
-                    var idx: u32 = @intCast(hash & (255 << 1));
+                    const hash = getHash2D(seed, xPrimed, yPrimed);
+                    const idx: u32 = @intCast(hash & (255 << 1));
 
-                    var vecX: f32 = @as(f32, @floatCast(@as(TFloat, @floatFromInt(xi)) - x)) + Lookup.randVecs2D[idx] * cellularJitter;
-                    var vecY: f32 = @as(f32, @floatCast(@as(TFloat, @floatFromInt(yi)) - y)) + Lookup.randVecs2D[idx | 1] * cellularJitter;
+                    const vecX: f32 = @as(f32, @floatCast(@as(TFloat, @floatFromInt(xi)) - x)) + Lookup.randVecs2D[idx] * cellularJitter;
+                    const vecY: f32 = @as(f32, @floatCast(@as(TFloat, @floatFromInt(yi)) - y)) + Lookup.randVecs2D[idx | 1] * cellularJitter;
 
-                    var newDistance = std.math.fabs(vecX) + std.math.fabs(vecY);
+                    const newDistance = @abs(vecX) + @abs(vecY);
 
                     distance1 = @max(@min(distance1, newDistance), distance0);
                     if (newDistance < distance0) {
@@ -1314,13 +1314,13 @@ fn singleCellular2D(self: Self, seed: i32, x: anytype, y: anytype) f32 {
 
                 var yi = yr - 1;
                 while (yi <= yr + 1) : (yi += 1) {
-                    var hash = getHash2D(seed, xPrimed, yPrimed);
-                    var idx: u32 = @intCast(hash & (255 << 1));
+                    const hash = getHash2D(seed, xPrimed, yPrimed);
+                    const idx: u32 = @intCast(hash & (255 << 1));
 
-                    var vecX: f32 = @as(f32, @floatCast(@as(TFloat, @floatFromInt(xi)) - x)) + Lookup.randVecs2D[idx] * cellularJitter;
-                    var vecY: f32 = @as(f32, @floatCast(@as(TFloat, @floatFromInt(yi)) - y)) + Lookup.randVecs2D[idx | 1] * cellularJitter;
+                    const vecX: f32 = @as(f32, @floatCast(@as(TFloat, @floatFromInt(xi)) - x)) + Lookup.randVecs2D[idx] * cellularJitter;
+                    const vecY: f32 = @as(f32, @floatCast(@as(TFloat, @floatFromInt(yi)) - y)) + Lookup.randVecs2D[idx | 1] * cellularJitter;
 
-                    var newDistance = (std.math.fabs(vecX) + std.math.fabs(vecY)) + (vecX * vecX + vecY * vecY);
+                    const newDistance = (@abs(vecX) + @abs(vecY)) + (vecX * vecX + vecY * vecY);
 
                     distance1 = @max(@min(distance1, newDistance), distance0);
                     if (newDistance < distance0) {
@@ -1354,19 +1354,19 @@ fn singleCellular2D(self: Self, seed: i32, x: anytype, y: anytype) f32 {
 }
 
 fn singleCellular3D(self: Self, seed: i32, comptime TFloat: type, x: TFloat, y: TFloat, z: TFloat) f32 {
-    var xr: i32 = fastRound(x);
-    var yr: i32 = fastRound(y);
-    var zr: i32 = fastRound(z);
+    const xr: i32 = fastRound(x);
+    const yr: i32 = fastRound(y);
+    const zr: i32 = fastRound(z);
 
     var distance0: f32 = 1e10;
     var distance1: f32 = 1e10;
     var closestHash: i32 = 0;
 
-    var cellularJitter: f32 = 0.39614353 * self.cellularJitterModifier;
+    const cellularJitter: f32 = 0.39614353 * self.cellularJitterModifier;
 
     var xPrimed: i32 = (xr - 1) *% PrimeX;
-    var yPrimedBase: i32 = (yr - 1) *% PrimeY;
-    var zPrimedBase: i32 = (zr - 1) *% PrimeZ;
+    const yPrimedBase: i32 = (yr - 1) *% PrimeY;
+    const zPrimedBase: i32 = (zr - 1) *% PrimeZ;
 
     switch (self.cellularDistanceFunction) {
         .Euclidean, .EuclideanSq => {
@@ -1381,14 +1381,14 @@ fn singleCellular3D(self: Self, seed: i32, comptime TFloat: type, x: TFloat, y: 
 
                     var zi: i32 = zr - 1;
                     while (zi <= zr + 1) : (zi += 1) {
-                        var hash = getHash3D(seed, xPrimed, yPrimed, zPrimed);
-                        var idx: u32 = @intCast(hash & (255 << 2));
+                        const hash = getHash3D(seed, xPrimed, yPrimed, zPrimed);
+                        const idx: u32 = @intCast(hash & (255 << 2));
 
-                        var vecX: f32 = @as(f32, @floatCast(@as(TFloat, @floatFromInt(xi)) - x)) + Lookup.randVecs3D[idx] * cellularJitter;
-                        var vecY: f32 = @as(f32, @floatCast(@as(TFloat, @floatFromInt(yi)) - y)) + Lookup.randVecs3D[idx | 1] * cellularJitter;
-                        var vecZ: f32 = @as(f32, @floatCast(@as(TFloat, @floatFromInt(zi)) - z)) + Lookup.randVecs3D[idx | 2] * cellularJitter;
+                        const vecX: f32 = @as(f32, @floatCast(@as(TFloat, @floatFromInt(xi)) - x)) + Lookup.randVecs3D[idx] * cellularJitter;
+                        const vecY: f32 = @as(f32, @floatCast(@as(TFloat, @floatFromInt(yi)) - y)) + Lookup.randVecs3D[idx | 1] * cellularJitter;
+                        const vecZ: f32 = @as(f32, @floatCast(@as(TFloat, @floatFromInt(zi)) - z)) + Lookup.randVecs3D[idx | 2] * cellularJitter;
 
-                        var newDistance = vecX * vecX + vecY * vecY + vecZ * vecZ;
+                        const newDistance = vecX * vecX + vecY * vecY + vecZ * vecZ;
 
                         distance1 = @max(@min(distance1, newDistance), distance0);
                         if (newDistance < distance0) {
@@ -1414,14 +1414,14 @@ fn singleCellular3D(self: Self, seed: i32, comptime TFloat: type, x: TFloat, y: 
 
                     var zi: i32 = zr - 1;
                     while (zi <= zr + 1) : (zi += 1) {
-                        var hash = getHash3D(seed, xPrimed, yPrimed, zPrimed);
-                        var idx: u32 = @intCast(hash & (255 << 2));
+                        const hash = getHash3D(seed, xPrimed, yPrimed, zPrimed);
+                        const idx: u32 = @intCast(hash & (255 << 2));
 
-                        var vecX: f32 = @as(f32, @floatCast(@as(TFloat, @floatFromInt(xi)) - x)) + Lookup.randVecs3D[idx] * cellularJitter;
-                        var vecY: f32 = @as(f32, @floatCast(@as(TFloat, @floatFromInt(yi)) - y)) + Lookup.randVecs3D[idx | 1] * cellularJitter;
-                        var vecZ: f32 = @as(f32, @floatCast(@as(TFloat, @floatFromInt(zi)) - z)) + Lookup.randVecs3D[idx | 2] * cellularJitter;
+                        const vecX: f32 = @as(f32, @floatCast(@as(TFloat, @floatFromInt(xi)) - x)) + Lookup.randVecs3D[idx] * cellularJitter;
+                        const vecY: f32 = @as(f32, @floatCast(@as(TFloat, @floatFromInt(yi)) - y)) + Lookup.randVecs3D[idx | 1] * cellularJitter;
+                        const vecZ: f32 = @as(f32, @floatCast(@as(TFloat, @floatFromInt(zi)) - z)) + Lookup.randVecs3D[idx | 2] * cellularJitter;
 
-                        var newDistance = std.math.fabs(vecX) + std.math.fabs(vecY) + std.math.fabs(vecZ);
+                        const newDistance = @abs(vecX) + @abs(vecY) + @abs(vecZ);
 
                         distance1 = @max(@min(distance1, newDistance), distance0);
                         if (newDistance < distance0) {
@@ -1446,14 +1446,14 @@ fn singleCellular3D(self: Self, seed: i32, comptime TFloat: type, x: TFloat, y: 
 
                     var zi: i32 = zr - 1;
                     while (zi <= zr + 1) : (zi += 1) {
-                        var hash = getHash3D(seed, xPrimed, yPrimed, zPrimed);
-                        var idx: u32 = @intCast(hash & (255 << 2));
+                        const hash = getHash3D(seed, xPrimed, yPrimed, zPrimed);
+                        const idx: u32 = @intCast(hash & (255 << 2));
 
-                        var vecX: f32 = @as(f32, @floatCast(@as(TFloat, @floatFromInt(xi)) - x)) + Lookup.randVecs3D[idx] * cellularJitter;
-                        var vecY: f32 = @as(f32, @floatCast(@as(TFloat, @floatFromInt(yi)) - y)) + Lookup.randVecs3D[idx | 1] * cellularJitter;
-                        var vecZ: f32 = @as(f32, @floatCast(@as(TFloat, @floatFromInt(zi)) - z)) + Lookup.randVecs3D[idx | 2] * cellularJitter;
+                        const vecX: f32 = @as(f32, @floatCast(@as(TFloat, @floatFromInt(xi)) - x)) + Lookup.randVecs3D[idx] * cellularJitter;
+                        const vecY: f32 = @as(f32, @floatCast(@as(TFloat, @floatFromInt(yi)) - y)) + Lookup.randVecs3D[idx | 1] * cellularJitter;
+                        const vecZ: f32 = @as(f32, @floatCast(@as(TFloat, @floatFromInt(zi)) - z)) + Lookup.randVecs3D[idx | 2] * cellularJitter;
 
-                        var newDistance = (std.math.fabs(vecX) + std.math.fabs(vecY) + std.math.fabs(vecZ)) + (vecX * vecX + vecY * vecY + vecZ * vecZ);
+                        const newDistance = (@abs(vecX) + @abs(vecY) + @abs(vecZ)) + (vecX * vecX + vecY * vecY + vecZ * vecZ);
 
                         distance1 = @max(@min(distance1, newDistance), distance0);
                         if (newDistance < distance0) {
@@ -1496,21 +1496,21 @@ fn singlePerlin2D(seed: i32, x: anytype, y: anytype) f32 {
     var x0: i32 = fastFloor(x);
     var y0: i32 = fastFloor(y);
 
-    var xd0: f32 = @floatCast(x - @as(TFloat, @floatFromInt(x0)));
-    var yd0: f32 = @floatCast(y - @as(TFloat, @floatFromInt(y0)));
-    var xd1 = xd0 - 1;
-    var yd1 = yd0 - 1;
+    const xd0: f32 = @floatCast(x - @as(TFloat, @floatFromInt(x0)));
+    const yd0: f32 = @floatCast(y - @as(TFloat, @floatFromInt(y0)));
+    const xd1 = xd0 - 1;
+    const yd1 = yd0 - 1;
 
-    var xs = interpQuintic(xd0);
-    var ys = interpQuintic(yd0);
+    const xs = interpQuintic(xd0);
+    const ys = interpQuintic(yd0);
 
     x0 *= PrimeX;
     y0 *= PrimeY;
-    var x1: i32 = x0 +% PrimeX;
-    var y1: i32 = y0 +% PrimeY;
+    const x1: i32 = x0 +% PrimeX;
+    const y1: i32 = y0 +% PrimeY;
 
-    var xf0 = std.math.lerp(gradCoord2D(seed, x0, y0, xd0, yd0), gradCoord2D(seed, x1, y0, xd1, yd0), xs);
-    var xf1 = std.math.lerp(gradCoord2D(seed, x0, y1, xd0, yd1), gradCoord2D(seed, x1, y1, xd1, yd1), xs);
+    const xf0 = std.math.lerp(gradCoord2D(seed, x0, y0, xd0, yd0), gradCoord2D(seed, x1, y0, xd1, yd0), xs);
+    const xf1 = std.math.lerp(gradCoord2D(seed, x0, y1, xd0, yd1), gradCoord2D(seed, x1, y1, xd1, yd1), xs);
 
     return std.math.lerp(xf0, xf1, ys) * 1.4247691104677813;
 }
@@ -1520,31 +1520,31 @@ fn singlePerlin3D(seed: i32, comptime TFloat: type, x: TFloat, y: TFloat, z: TFl
     var y0: i32 = fastFloor(y);
     var z0: i32 = fastFloor(z);
 
-    var xd0: f32 = @floatCast(x - @as(TFloat, @floatFromInt(x0)));
-    var yd0: f32 = @floatCast(y - @as(TFloat, @floatFromInt(y0)));
-    var zd0: f32 = @floatCast(z - @as(TFloat, @floatFromInt(z0)));
-    var xd1: f32 = xd0 - 1;
-    var yd1: f32 = yd0 - 1;
-    var zd1: f32 = zd0 - 1;
+    const xd0: f32 = @floatCast(x - @as(TFloat, @floatFromInt(x0)));
+    const yd0: f32 = @floatCast(y - @as(TFloat, @floatFromInt(y0)));
+    const zd0: f32 = @floatCast(z - @as(TFloat, @floatFromInt(z0)));
+    const xd1: f32 = xd0 - 1;
+    const yd1: f32 = yd0 - 1;
+    const zd1: f32 = zd0 - 1;
 
-    var xs: f32 = interpQuintic(xd0);
-    var ys: f32 = interpQuintic(yd0);
-    var zs: f32 = interpQuintic(zd0);
+    const xs: f32 = interpQuintic(xd0);
+    const ys: f32 = interpQuintic(yd0);
+    const zs: f32 = interpQuintic(zd0);
 
     x0 *%= PrimeX;
     y0 *%= PrimeY;
     z0 *%= PrimeZ;
-    var x1: i32 = x0 +% PrimeX;
-    var y1: i32 = y0 +% PrimeY;
-    var z1: i32 = z0 +% PrimeZ;
+    const x1: i32 = x0 +% PrimeX;
+    const y1: i32 = y0 +% PrimeY;
+    const z1: i32 = z0 +% PrimeZ;
 
-    var xf00: f32 = std.math.lerp(gradCoord3D(seed, x0, y0, z0, xd0, yd0, zd0), gradCoord3D(seed, x1, y0, z0, xd1, yd0, zd0), xs);
-    var xf10: f32 = std.math.lerp(gradCoord3D(seed, x0, y1, z0, xd0, yd1, zd0), gradCoord3D(seed, x1, y1, z0, xd1, yd1, zd0), xs);
-    var xf01: f32 = std.math.lerp(gradCoord3D(seed, x0, y0, z1, xd0, yd0, zd1), gradCoord3D(seed, x1, y0, z1, xd1, yd0, zd1), xs);
-    var xf11: f32 = std.math.lerp(gradCoord3D(seed, x0, y1, z1, xd0, yd1, zd1), gradCoord3D(seed, x1, y1, z1, xd1, yd1, zd1), xs);
+    const xf00: f32 = std.math.lerp(gradCoord3D(seed, x0, y0, z0, xd0, yd0, zd0), gradCoord3D(seed, x1, y0, z0, xd1, yd0, zd0), xs);
+    const xf10: f32 = std.math.lerp(gradCoord3D(seed, x0, y1, z0, xd0, yd1, zd0), gradCoord3D(seed, x1, y1, z0, xd1, yd1, zd0), xs);
+    const xf01: f32 = std.math.lerp(gradCoord3D(seed, x0, y0, z1, xd0, yd0, zd1), gradCoord3D(seed, x1, y0, z1, xd1, yd0, zd1), xs);
+    const xf11: f32 = std.math.lerp(gradCoord3D(seed, x0, y1, z1, xd0, yd1, zd1), gradCoord3D(seed, x1, y1, z1, xd1, yd1, zd1), xs);
 
-    var yf0: f32 = std.math.lerp(xf00, xf10, ys);
-    var yf1: f32 = std.math.lerp(xf01, xf11, ys);
+    const yf0: f32 = std.math.lerp(xf00, xf10, ys);
+    const yf1: f32 = std.math.lerp(xf01, xf11, ys);
 
     return std.math.lerp(yf0, yf1, zs) * 0.964921414852142333984375;
 }
@@ -1557,19 +1557,19 @@ fn singleValueCubic2D(seed: i32, x: anytype, y: anytype) f32 {
     var x1: i32 = fastFloor(x);
     var y1: i32 = fastFloor(y);
 
-    var xs: f32 = @floatCast(x - @as(TFloat, @floatFromInt(x1)));
-    var ys: f32 = @floatCast(y - @as(TFloat, @floatFromInt(y1)));
+    const xs: f32 = @floatCast(x - @as(TFloat, @floatFromInt(x1)));
+    const ys: f32 = @floatCast(y - @as(TFloat, @floatFromInt(y1)));
 
     x1 *%= PrimeX;
     y1 *%= PrimeY;
-    var x0: i32 = x1 -% PrimeX;
-    var y0: i32 = y1 -% PrimeY;
-    var x2: i32 = x1 +% PrimeX;
-    var y2: i32 = y1 +% PrimeY;
+    const x0: i32 = x1 -% PrimeX;
+    const y0: i32 = y1 -% PrimeY;
+    const x2: i32 = x1 +% PrimeX;
+    const y2: i32 = y1 +% PrimeY;
     // int x3 = x1 + (int)((long)PrimeX << 1);
     // int y3 = y1 + (int)((long)PrimeY << 1);
-    var x3: i32 = x1 +% @as(i32, @truncate(@as(i64, PrimeX) << 1));
-    var y3: i32 = y1 +% @as(i32, @truncate(@as(i64, PrimeY) << 1));
+    const x3: i32 = x1 +% @as(i32, @truncate(@as(i64, PrimeX) << 1));
+    const y3: i32 = y1 +% @as(i32, @truncate(@as(i64, PrimeY) << 1));
 
     return cubicLerp(
         cubicLerp(valCoord2D(seed, x0, y0), valCoord2D(seed, x1, y0), valCoord2D(seed, x2, y0), valCoord2D(seed, x3, y0), xs),
@@ -1585,23 +1585,23 @@ fn singleValueCubic3D(seed: i32, comptime TFloat: type, x: TFloat, y: TFloat, z:
     var y1: i32 = fastFloor(y);
     var z1: i32 = fastFloor(z);
 
-    var xs: f32 = @floatCast(x - @as(TFloat, @floatFromInt(x1)));
-    var ys: f32 = @floatCast(y - @as(TFloat, @floatFromInt(y1)));
-    var zs: f32 = @floatCast(z - @as(TFloat, @floatFromInt(z1)));
+    const xs: f32 = @floatCast(x - @as(TFloat, @floatFromInt(x1)));
+    const ys: f32 = @floatCast(y - @as(TFloat, @floatFromInt(y1)));
+    const zs: f32 = @floatCast(z - @as(TFloat, @floatFromInt(z1)));
 
     x1 *%= PrimeX;
     y1 *%= PrimeY;
     z1 *%= PrimeZ;
 
-    var x0: i32 = x1 -% PrimeX;
-    var y0: i32 = y1 -% PrimeY;
-    var z0: i32 = z1 -% PrimeZ;
-    var x2: i32 = x1 +% PrimeX;
-    var y2: i32 = y1 +% PrimeY;
-    var z2: i32 = z1 +% PrimeZ;
-    var x3: i32 = x1 +% @as(i32, @truncate(@as(i64, PrimeX) << 1));
-    var y3: i32 = y1 +% @as(i32, @truncate(@as(i64, PrimeY) << 1));
-    var z3: i32 = z1 +% @as(i32, @truncate(@as(i64, PrimeZ) << 1));
+    const x0: i32 = x1 -% PrimeX;
+    const y0: i32 = y1 -% PrimeY;
+    const z0: i32 = z1 -% PrimeZ;
+    const x2: i32 = x1 +% PrimeX;
+    const y2: i32 = y1 +% PrimeY;
+    const z2: i32 = z1 +% PrimeZ;
+    const x3: i32 = x1 +% @as(i32, @truncate(@as(i64, PrimeX) << 1));
+    const y3: i32 = y1 +% @as(i32, @truncate(@as(i64, PrimeY) << 1));
+    const z3: i32 = z1 +% @as(i32, @truncate(@as(i64, PrimeZ) << 1));
 
     return cubicLerp(
         cubicLerp(
@@ -1728,25 +1728,25 @@ fn doSingleDomainWarp3D(
 // Domain Warp Single Wrapper
 
 fn domainWarpSingle2D(self: Self, comptime TFloat: type, x: *TFloat, y: *TFloat) void {
-    var seed = self.seed;
-    var amp = self.domainWarpAmp * self.fractalBounding;
-    var freq = self.frequency;
+    const seed = self.seed;
+    const amp = self.domainWarpAmp * self.fractalBounding;
+    const freq = self.frequency;
 
-    var xs = x;
-    var ys = y;
+    const xs = x;
+    const ys = y;
     transformDomainWarpCoordinate2D(xs, ys);
 
     doSingleDomainWarp2D(seed, amp, freq, xs, ys, x, y);
 }
 
 fn domainWarpSingle3D(self: Self, comptime TFloat: type, x: *TFloat, y: *TFloat, z: *TFloat) void {
-    var seed = self.seed;
-    var amp = self.domainWarpAmp * self.fractalBounding;
-    var freq = self.frequency;
+    const seed = self.seed;
+    const amp = self.domainWarpAmp * self.fractalBounding;
+    const freq = self.frequency;
 
-    var xs = x;
-    var ys = y;
-    var zs = z;
+    const xs = x;
+    const ys = y;
+    const zs = z;
     transformDomainWarpCoordinate3D(xs, ys, zs);
 
     doSingleDomainWarp3D(seed, amp, freq, xs, ys, zs, x, y, z);
@@ -1760,8 +1760,8 @@ fn domainWarpFractalProgressive2D(self: Self, comptime TFloat: type, x: *TFloat,
     var freq = self.frequency;
 
     for (0..self.octaves) |_| {
-        var xs = x;
-        var ys = y;
+        const xs = x;
+        const ys = y;
         self.transformDomainWarpCoordinate2D(xs, ys);
 
         self.doSingleDomainWarp2D(seed, amp, freq, xs, ys, x, y);
@@ -1778,9 +1778,9 @@ fn domainWarpFractalProgressive3D(self: Self, comptime TFloat: type, x: *TFloat,
     var freq = self.frequency;
 
     for (0..self.octaves) |_| {
-        var xs = x;
-        var ys = y;
-        var zs = z;
+        const xs = x;
+        const ys = y;
+        const zs = z;
         self.transformDomainWarpCoordinate3D(xs, ys, zs);
 
         self.doSingleDomainWarp3D(seed, amp, freq, xs, ys, zs, x, y, z);
@@ -1794,8 +1794,8 @@ fn domainWarpFractalProgressive3D(self: Self, comptime TFloat: type, x: *TFloat,
 // Domain Warp Fractal Independant
 
 fn domainWarpFractalIndependent2D(self: Self, comptime TFloat: type, x: *TFloat, y: *TFloat) void {
-    var xs = x;
-    var ys = y;
+    const xs = x;
+    const ys = y;
     self.transformDomainWarpCoordinate2D(xs, ys);
 
     var seed = self.seed;
@@ -1812,9 +1812,9 @@ fn domainWarpFractalIndependent2D(self: Self, comptime TFloat: type, x: *TFloat,
 }
 
 fn domainWarpFractalIndependent3D(self: Self, comptime TFloat: type, x: *TFloat, y: *TFloat, z: *TFloat) void {
-    var xs = x;
-    var ys = y;
-    var zs = z;
+    const xs = x;
+    const ys = y;
+    const zs = z;
     self.transformDomainWarpCoordinate3D(xs, ys, zs);
 
     var seed = self.seed;
@@ -1842,19 +1842,19 @@ fn singleDomainWarpBasicGrid2D(
     xr: *TFloat,
     yr: *TFloat,
 ) void {
-    var xf = x * frequency;
-    var yf = y * frequency;
+    const xf = x * frequency;
+    const yf = y * frequency;
 
     var x0: i32 = fastFloor(xf);
     var y0: i32 = fastFloor(yf);
 
-    var xs = interpHermite(@floatCast(xf - @as(TFloat, @floatFromInt(x0))));
-    var ys = interpHermite(@floatCast(yf - @as(TFloat, @floatFromInt(y0))));
+    const xs = interpHermite(@floatCast(xf - @as(TFloat, @floatFromInt(x0))));
+    const ys = interpHermite(@floatCast(yf - @as(TFloat, @floatFromInt(y0))));
 
     x0 *%= PrimeX;
     y0 *%= PrimeY;
-    var x1 = x0 +% PrimeX;
-    var y1 = y0 +% PrimeY;
+    const x1 = x0 +% PrimeX;
+    const y1 = y0 +% PrimeY;
 
     var hash0: u32 = @intCast(getHash2D(seed, x0, y0) & (255 << 1));
     var hash1: u32 = @intCast(getHash2D(seed, x1, y0) & (255 << 1));
@@ -1884,9 +1884,9 @@ fn singleDomainWarpBasicGrid3D(
     yr: *TFloat,
     zr: *TFloat,
 ) void {
-    var xf: TFloat = x * frequency;
-    var yf: TFloat = y * frequency;
-    var zf: TFloat = z * frequency;
+    const xf: TFloat = x * frequency;
+    const yf: TFloat = y * frequency;
+    const zf: TFloat = z * frequency;
 
     var x0: i32 = fastFloor(xf);
     var y0: i32 = fastFloor(yf);
@@ -1917,9 +1917,9 @@ fn singleDomainWarpBasicGrid3D(
     var ly1x: f32 = std.math.lerp(Lookup.randVecs3D[hash0 | 1], Lookup.randVecs3D[hash1 | 1], xs);
     var lz1x: f32 = std.math.lerp(Lookup.randVecs3D[hash0 | 2], Lookup.randVecs3D[hash1 | 2], xs);
 
-    var lx0y: f32 = std.math.lerp(lx0x, lx1x, ys);
-    var ly0y: f32 = std.math.lerp(ly0x, ly1x, ys);
-    var lz0y: f32 = std.math.lerp(lz0x, lz1x, ys);
+    const lx0y: f32 = std.math.lerp(lx0x, lx1x, ys);
+    const ly0y: f32 = std.math.lerp(ly0x, ly1x, ys);
+    const lz0y: f32 = std.math.lerp(lz0x, lz1x, ys);
 
     hash0 = @intCast(getHash3D(seed, x0, y0, z1) & (255 << 2));
     hash1 = @intCast(getHash3D(seed, x1, y0, z1) & (255 << 2));
@@ -1966,12 +1966,12 @@ fn singleDomainWarpSimplexGradient2D(
 
     var i: i32 = fastFloor(x);
     var j: i32 = fastFloor(y);
-    var xi: f32 = @floatCast(x - @as(TFloat, @floatFromInt(i)));
-    var yi: f32 = @floatCast(y - @as(TFloat, @floatFromInt(j)));
+    const xi: f32 = @floatCast(x - @as(TFloat, @floatFromInt(i)));
+    const yi: f32 = @floatCast(y - @as(TFloat, @floatFromInt(j)));
 
-    var t: f32 = (xi + yi) * G2;
-    var x0: f32 = (xi - t);
-    var y0: f32 = (yi - t);
+    const t: f32 = (xi + yi) * G2;
+    const x0: f32 = (xi - t);
+    const y0: f32 = (yi - t);
 
     i *%= PrimeX;
     j *%= PrimeY;
@@ -1979,9 +1979,9 @@ fn singleDomainWarpSimplexGradient2D(
     var vx: f32 = 0;
     var vy: f32 = 0;
 
-    var a: f32 = 0.5 - x0 * x0 - y0 * y0;
+    const a: f32 = 0.5 - x0 * x0 - y0 * y0;
     if (a > 0) {
-        var aaaa: f32 = (a * a) * (a * a);
+        const aaaa: f32 = (a * a) * (a * a);
         var xo: f32 = undefined;
         var yo: f32 = undefined;
         if (outGradOnly) {
@@ -1993,11 +1993,11 @@ fn singleDomainWarpSimplexGradient2D(
         vy += aaaa * yo;
     }
 
-    var c: f32 = (2 * (1 - 2 * G2) * (1 / G2 - 2)) * t + ((-2 * (1 - 2 * G2) * (1 - 2 * G2)) + a);
+    const c: f32 = (2 * (1 - 2 * G2) * (1 / G2 - 2)) * t + ((-2 * (1 - 2 * G2) * (1 - 2 * G2)) + a);
     if (c > 0) {
-        var x2: f32 = x0 + (2 * G2 - 1);
-        var y2: f32 = y0 + (2 * G2 - 1);
-        var cccc = (c * c) * (c * c);
+        const x2: f32 = x0 + (2 * G2 - 1);
+        const y2: f32 = y0 + (2 * G2 - 1);
+        const cccc = (c * c) * (c * c);
         var xo: f32 = undefined;
         var yo: f32 = undefined;
         if (outGradOnly) {
@@ -2010,11 +2010,11 @@ fn singleDomainWarpSimplexGradient2D(
     }
 
     if (y0 > x0) {
-        var x1: f32 = x0 + G2;
-        var y1: f32 = y0 + (G2 - 1);
-        var b = 0.5 - x1 * x1 - y1 * y1;
+        const x1: f32 = x0 + G2;
+        const y1: f32 = y0 + (G2 - 1);
+        const b = 0.5 - x1 * x1 - y1 * y1;
         if (b > 0) {
-            var bbbb = (b * b) * (b * b);
+            const bbbb = (b * b) * (b * b);
             var xo: f32 = undefined;
             var yo: f32 = undefined;
             if (outGradOnly) {
@@ -2026,11 +2026,11 @@ fn singleDomainWarpSimplexGradient2D(
             vy += bbbb * yo;
         }
     } else {
-        var x1: f32 = x0 + (G2 - 1);
-        var y1: f32 = y0 + G2;
-        var b: f32 = 0.5 - x1 * x1 - y1 * y1;
+        const x1: f32 = x0 + (G2 - 1);
+        const y1: f32 = y0 + G2;
+        const b: f32 = 0.5 - x1 * x1 - y1 * y1;
         if (b > 0) {
-            var bbbb: f32 = (b * b) * (b * b);
+            const bbbb: f32 = (b * b) * (b * b);
             var xo: f32 = undefined;
             var yo: f32 = undefined;
             if (outGradOnly) {
@@ -2095,7 +2095,7 @@ fn singleDomainWarpOpenSimplex2Gradient3D(
     var a = (0.6 - x0 * x0) - (y0 * y0 + z0 * z0);
     for (0..2) |l| {
         if (a > 0) {
-            var aaaa: f32 = (a * a) * (a * a);
+            const aaaa: f32 = (a * a) * (a * a);
             var xo: f32 = undefined;
             var yo: f32 = undefined;
             var zo: f32 = undefined;
@@ -2132,7 +2132,7 @@ fn singleDomainWarpOpenSimplex2Gradient3D(
         }
 
         if (b > 0) {
-            var bbbb: f32 = (b * b) * (b * b);
+            const bbbb: f32 = (b * b) * (b * b);
             var xo: f32 = undefined;
             var yo: f32 = undefined;
             var zo: f32 = undefined;
