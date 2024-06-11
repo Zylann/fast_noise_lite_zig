@@ -1,6 +1,12 @@
 .{
     .name = "fast-noise-lite",
     .version = "0.1.0",
-    .minimum_zig_version = "0.12.0",
-    .paths = .{"fast_noise_lite.zig"},
+
+    .paths = .{
+        "src",
+        "build.zig",
+        "build.zig.zon",
+        "LICENSE.md",
+        "README.md",
+    },
 }
