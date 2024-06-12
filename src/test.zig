@@ -26,7 +26,7 @@ fn printNoiseBuffer(writer: anytype, buffer: []const f32, size_x: u32, size_y: u
     }
 }
 
-pub fn main() !void {
+test "noise_gen_test" {
     const stdout = std.io.getStdOut().writer();
     try stdout.print("Hello World!\n", .{});
 
