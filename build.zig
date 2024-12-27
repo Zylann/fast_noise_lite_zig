@@ -22,5 +22,5 @@ pub fn build(b: *std.Build) void {
     });
     const run_test_step = b.addRunArtifact(tests);
     const test_step = b.step("test", "Run unit tests");
-    test_step.dependOn(run_test_step.step);
+    test_step.dependOn(&run_test_step.step);
 }
