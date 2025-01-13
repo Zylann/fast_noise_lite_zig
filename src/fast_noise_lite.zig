@@ -1504,8 +1504,8 @@ fn singlePerlin2D(seed: i32, x: anytype, y: anytype) f32 {
     const xs = interpQuintic(xd0);
     const ys = interpQuintic(yd0);
 
-    x0 *= PrimeX;
-    y0 *= PrimeY;
+    x0 *%= PrimeX;
+    y0 *%= PrimeY;
     const x1: i32 = x0 +% PrimeX;
     const y1: i32 = y0 +% PrimeY;
 
